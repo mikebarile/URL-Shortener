@@ -26,7 +26,13 @@ class ShortenedUrl < ActiveRecord::Base
     class_name: :Visit
   )
 
-  has_many :visitors, through: :visits, source: :visitor
+  has_many(:visitors,
+    Proc.new { distinct },
+    through: :visits,
+    source: :visitor
+  )
+
+  #has_many :visitors, Proc.new { distinct }, through: :visits, source: :visitor
 
   def num_clicks
     clicks = ActiveRecord::Base.connection.execute("
@@ -36,10 +42,7 @@ class ShortenedUrl < ActiveRecord::Base
   end
 
   def num_uniques
-    clicks = ActiveRecord::Base.connection.execute("
-      SELECT DISTINCT visitor_id
-      FROM visits
-      ").map{|l| l}.length
+    clicks = visitors.length
   end
 
   def num_recent_uniques
