@@ -19,4 +19,11 @@ class User < ActiveRecord::Base
     source: :shortened_url
   )
 
+  after_initialize :set_default_values
+
+  def set_default_values
+    # Only set if time_zone IS NOT set
+    self.premium ||= false
+  end
+
 end
