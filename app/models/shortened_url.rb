@@ -2,13 +2,21 @@ class ShortenedUrl < ActiveRecord::Base
   validates :short_url, uniqueness: true, presence: true
   validates :long_url, :user_id, presence: true
   validates :long_url, length: { maximum: 1023 }
-  validate :max_five_submits
+  validate :max_five_submits, :max_five_unless_premium
 
   def max_five_submits
-    p urls = User.find_by(id: user_id).submitted_urls.where("created_at >
+    urls = User.find_by(id: user_id).submitted_urls.where("created_at >
         '#{1.minute.ago}'::TIMESTAMP").length
 
     errors[:submit_error] << "Too many submits within a minute" if urls > 5
+  end
+
+  def max_five_unless_premium
+    num_urls = User.find_by(id: user_id).submitted_urls.length
+    premium = User.find_by(id: user_id).premium
+    if num_urls >= 5 && !premium
+      errors[:submit_error] << "Only premium members get more than 5 urls!!!"
+    end
   end
 
   def self.random_code
