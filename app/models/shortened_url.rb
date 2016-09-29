@@ -1,6 +1,15 @@
 class ShortenedUrl < ActiveRecord::Base
   validates :short_url, uniqueness: true, presence: true
   validates :long_url, :user_id, presence: true
+  validates :long_url, length: { maximum: 1023 }
+  validate :max_five_submits
+
+  def max_five_submits
+    p urls = User.find_by(id: user_id).submitted_urls.where("created_at >
+        '#{1.minute.ago}'::TIMESTAMP").length
+
+    errors[:submit_error] << "Too many submits within a minute" if urls > 5
+  end
 
   def self.random_code
     string = SecureRandom.urlsafe_base64(12)
